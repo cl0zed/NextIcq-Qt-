@@ -8,9 +8,11 @@
 #include <QMenu>
 #include <QLineEdit>
 #include "dialogwindow.h"
+#include "draw.h"
 
 class dialogWindow;
 class MyClient;
+class PaintWidget;
 class mainWidget : public QWidget
 {
     Q_OBJECT
@@ -30,6 +32,7 @@ protected:
 public:
     dialogWindow* dialog ;
     QListWidget* contacts;
+    PaintWidget* paint;
     explicit mainWidget(QWidget *parent = 0);
 
 public slots:

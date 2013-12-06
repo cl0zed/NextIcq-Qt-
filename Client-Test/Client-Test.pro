@@ -13,3 +13,6 @@ SOURCES += \
     addfriendwindow.cpp \
     draw.cpp
 QT += network
+
+OTHER_FILES += \
+    serverAddress.txt

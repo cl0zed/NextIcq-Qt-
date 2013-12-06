@@ -60,6 +60,24 @@ void MyClient::sendMessageToDelete()
     socket->write(array);
 }
 
+void MyClient::sendPaintedPoints(QList<MyQPoint>& PointArray)
+{
+    QByteArray array;
+    QDataStream out (&array, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_4_5);
+
+    out << quint16(0) << quint8(5) << clientName << PointArray.count();
+
+    QList<MyQPoint>::ConstIterator pos;
+    for ( pos = PointArray.constBegin(); pos != PointArray.constEnd(); ++pos )
+    {
+        out << (*pos).point << (*pos).repaintWithNext;
+    }
+
+    out.device()->seek(0);
+    socket->write(array);
+}
+
 
 MyClient::MyClient(const QString &str, int Port, mainWidget *parent) :
     QWidget(parent), nextBlockSize(0)
@@ -98,6 +116,11 @@ QString MyClient::takeMyName()
 QString MyClient::takeMessage()
 {
     return messageFromServer;
+}
+
+QString MyClient::takeClientName()
+{
+    return clientName;
 }
 
 void MyClient::slotReadReady()
@@ -150,6 +173,22 @@ void MyClient::slotReadReady()
                 qDebug() << "Contacts read";
                 break;
             }
+            case MyClient::messageGetPointList :
+            {
+                int count;
+                stream >> count;
+
+                MyQPoint newMyQPoint;
+
+                for (int i = 0; i < count; ++i)
+                {
+                    stream >> newMyQPoint.point >> newMyQPoint.repaintWithNext;
+                    parentMainWidget->paint->gettingPoint.append(newMyQPoint);       
+                }
+                qDebug() << "Get " << count << " Points";
+
+               parentMainWidget->paint->repaint();
+            }
         }
 
 
@@ -173,7 +212,6 @@ void MyClient::slotSendToServer()
 
     out.device()->seek(0);
     socket->write(array);
-
 }
 
 void MyClient::slotConnected()

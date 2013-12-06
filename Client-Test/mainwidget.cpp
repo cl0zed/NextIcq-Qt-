@@ -1,12 +1,13 @@
 #include "mainwidget.h"
 #include "addfriendwindow.h"
 #include "dialogwindow.h"
-#include "draw.h"
 #include <QAction>
 #include <QMenu>
 #include <QPushButton>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QFile>
+#include <QTextStream>
 void mainWidget::createMenu()
 {
     contextMenu = new QMenu(this);
@@ -69,7 +70,13 @@ mainWidget::mainWidget(QWidget *parent) :
 {
     dialog = 0;
     this->setWindowTitle("Icq");
-    client = new MyClient("localhost", 2324, this);
+    QFile file("../NextIcq/Client-Test/serverAddress.txt");
+    file.open(QIODevice::ReadOnly);
+    QTextStream stream(&file);
+    QString IP;
+    stream >> IP;
+    qDebug() << IP;
+    client = new MyClient(IP , 2324, this);
 
     this->setFixedSize(200, 300);
     contacts = new QListWidget;
@@ -119,14 +126,14 @@ void mainWidget::slotAddFriend()
 
 void mainWidget::slotDialogStart()
 {
-    if (contacts->count() != 0 && dialog == 0 )
+    if ( contacts->count() != 0 &&  ( dialog == 0 || client->takeClientName() != contacts->currentItem()->text() ) )
     {
         dialog = new dialogWindow(this, client, contacts->currentItem()->text());
         //client->takeDialog(dialog);
         dialog ->setModal(true);
         dialog->show();
     }
-    else if (dialog != 0)
+    else if (dialog != 0 && client->takeClientName() == contacts->currentItem()->text() )
     {
         dialog->show();
     }
@@ -134,14 +141,13 @@ void mainWidget::slotDialogStart()
 
 void mainWidget::slotDialogStart(QListWidgetItem *item)
 {
-    if (contacts->count() != 0 && dialog == 0)
+    if (contacts->count() != 0 && (dialog == 0 || client->takeClientName() != item->text()) )
     {
         dialog = new dialogWindow(this, client, item->text());
-        //client->takeDialog(dialog);
         dialog ->setModal(true);
         dialog->show();
     }
-    else if (dialog != 0)
+    else if (dialog != 0 && client->takeClientName() ==  item->text() )
     {
         dialog->show();
     }
@@ -170,6 +176,8 @@ void mainWidget::slotSetName()
 
 void mainWidget::slotStartPaint()
 {
-    PaintWidget widget;
-    widget.show();
+    paint = new PaintWidget(this, client);
+    paint->setModal(true);
+    client->setSenderName(contacts->currentItem()->text());
+    paint->show();
 }

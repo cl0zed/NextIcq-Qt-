@@ -8,8 +8,11 @@
 #include <QString>
 #include <QStringList>
 #include "mainwidget.h"
+#include "draw.h"
 
 class mainWidget;
+struct MyQPoint;
+
 class MyClient : public QWidget
 {
     Q_OBJECT
@@ -21,9 +24,11 @@ private:
     QString messageFromServer;
     quint16 nextBlockSize;
     mainWidget* parentMainWidget;
+    QList<MyQPoint> PointList;
 
     static const quint8 messageGetMessage = 1;
     static const quint8 messageGetContactList = 2;
+    static const quint8 messageGetPointList = 3;
 public:
 
     QStringList contacts;
@@ -34,6 +39,7 @@ public:
 
     QString takeMyName();
     QString takeMessage();
+    QString takeClientName();
 
     void NewRegiter();
 
@@ -42,7 +48,7 @@ public:
     void waitSendMessage();
     void send();
     void sendMessageToDelete();
-
+    void sendPaintedPoints(QList<MyQPoint>& );
 private slots:
     void slotReadReady();
     void slotError(QAbstractSocket::SocketError);

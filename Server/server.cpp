@@ -46,6 +46,28 @@ void MyServer::sendContactBase(QTcpSocket * socket)
     qDebug() << "Contacts send";
 }
 
+void MyServer::sendPoint(QTcpSocket *socket, QList<MyQPoint> &PointArray)
+{
+    QByteArray array;
+    QDataStream out (&array, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_4_5);
+
+    out << quint16(0) << quint8(3) << PointArray.count();
+
+    QList<MyQPoint>::ConstIterator pos;
+    for ( pos = PointArray.constBegin(); pos != PointArray.constEnd(); ++pos )
+    {
+        out << (*pos).point << (*pos).repaintWithNext;
+        qDebug() << "Send " << (*pos).point << (*pos).repaintWithNext ;
+    }
+
+    out.device()->seek(0);
+    qDebug() << PointArray.count();
+    PointArray.clear();
+    socket->write(array);
+
+}
+
 MyServer::MyServer(int nPort, QWidget *parent) :
     QWidget(parent), nextBlockSize(0), Port(nPort)
 {
@@ -181,6 +203,35 @@ void MyServer::slotClientRead()
                     }
                 }
                 break;
+            }
+            case MyServer::cmdGetPoints :
+            {
+               QString userName;
+               in >> userName;
+
+               int count;
+               in >> count;
+
+               MyQPoint newPoint;
+
+               for (int i = 0; i < count; ++i)
+               {
+                   in >> newPoint.point >> newPoint.repaintWithNext;
+                   qDebug() << "Get " << newPoint.point;
+                   points.append(newPoint);
+               }
+
+               QList<HostSocket>::const_iterator pos;
+               for ( pos=sockets.constBegin(); pos!=sockets.constEnd(); ++pos )
+               {
+                   if ( pos->userName == userName )
+                   {
+                       qDebug() << "Send to " << pos->userName;
+                       sendPoint(pos->socket, points);
+                   }
+               }
+               break;
+               qDebug() << "get " << points.count() << "Points ";
             }
         default:break;
         }

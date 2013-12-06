@@ -7,6 +7,20 @@
 #include <QString>
 #include <QList>
 
+struct MyQPoint
+{
+    QPoint point;
+    bool repaintWithNext;
+    MyQPoint(QPoint thisPoint) {
+        point = thisPoint;
+        repaintWithNext=true;
+    }
+    MyQPoint()
+    {
+        repaintWithNext = false;
+    }
+};
+
 struct HostSocket
 {
     QString userName;
@@ -20,8 +34,11 @@ private:
     QTcpServer* server;
     quint16 nextBlockSize;
     QList<HostSocket> sockets;
+    QList<MyQPoint> points;
+
     void sendMessage(QTcpSocket* , const QString& , const QString &name);
     void sendContactBase(QTcpSocket*);
+    void sendPoint(QTcpSocket*, QList<MyQPoint>& );
 
 public:
     explicit MyServer(int, QWidget *parent = 0);
@@ -30,6 +47,7 @@ public:
     static const quint8 cmdUserName = 2;
     static const quint8 cmdGetContactList = 3;
     static const quint8 cmdGetDeleteMessage = 4;
+    static const quint8 cmdGetPoints = 5;
 
 public slots:
     void slotNewConnection();
