@@ -38,9 +38,9 @@ void PaintWidget::mouseReleaseEvent(QMouseEvent *event)
 
         mDrawBuffer.last().repaintWithNext= false;
         toSendPoints.last().repaintWithNext = false;
-        client->sendPaintedPoints(toSendPoints);
 
-        toSendPoints.clear();
+        client->sendPaintedPoints(toSendPoints, true);
+
         this->update();
         event->accept();
     }
@@ -51,6 +51,9 @@ void PaintWidget::mouseMoveEvent(QMouseEvent *event)
     if (!mDrawMode) return;
     mDrawBuffer.append(MyQPoint(event->x(), event->y()));
     toSendPoints.append(MyQPoint(event->x(), event->y()));
+
+    if (toSendPoints.count() >= 159) client->sendPaintedPoints(toSendPoints, false);
+    qDebug() << toSendPoints.count();
     this->update();
     event->accept();
 }
@@ -61,9 +64,8 @@ void PaintWidget::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     if ( !gettingPoint.isEmpty() )
     {
-        qDebug() << gettingPoint.count() ;
+        //qDebug() << gettingPoint.count();
         painter.setPen(QPen(Qt::green, 3));
-        qDebug() << painter.pen();
         QList<MyQPoint>::const_iterator it = gettingPoint.begin();
         MyQPoint start = *it;
         while (it != gettingPoint.end())

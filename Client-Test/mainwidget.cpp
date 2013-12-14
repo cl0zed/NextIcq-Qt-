@@ -70,12 +70,22 @@ mainWidget::mainWidget(QWidget *parent) :
 {
     dialog = 0;
     this->setWindowTitle("Icq");
+#ifdef QT_NO_DEBUG
+    QFile file("serverAddress.txt");
+    qDebug() << "i'm here";
+#else
     QFile file("../NextIcq/Client-Test/serverAddress.txt");
-    file.open(QIODevice::ReadOnly);
+#endif
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        qDebug() << "Unable to Open";
+        return;
+    }
+
     QTextStream stream(&file);
     QString IP;
-    stream >> IP;
-    qDebug() << IP;
+    IP = file.readLine();
+    qDebug() <<"IP" << IP;
     client = new MyClient(IP , 2324, this);
 
     this->setFixedSize(200, 300);

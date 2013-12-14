@@ -60,22 +60,24 @@ void MyClient::sendMessageToDelete()
     socket->write(array);
 }
 
-void MyClient::sendPaintedPoints(QList<MyQPoint>& PointArray)
+void MyClient::sendPaintedPoints(QList<MyQPoint>& PointArray, bool toUpdate)
 {
     QByteArray array;
     QDataStream out (&array, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_5);
 
-    out << quint16(0) << quint8(5) << clientName << PointArray.count();
+    out << quint16(0) << quint8(5) << clientName << PointArray.count() << toUpdate;
 
     QList<MyQPoint>::ConstIterator pos;
+    int i = 0;
     for ( pos = PointArray.constBegin(); pos != PointArray.constEnd(); ++pos )
     {
-        out << (*pos).point << (*pos).repaintWithNext;
+        qDebug() << "send" << (*pos).point << i++;
+        out << (*pos).point.x() << (*pos).point.y() << (*pos).repaintWithNext;
     }
-
     out.device()->seek(0);
     socket->write(array);
+        PointArray.clear();
 }
 
 
@@ -177,17 +179,27 @@ void MyClient::slotReadReady()
             {
                 int count;
                 stream >> count;
+                bool toUpdate;
 
+                stream >> toUpdate;
                 MyQPoint newMyQPoint;
 
                 for (int i = 0; i < count; ++i)
                 {
-                    stream >> newMyQPoint.point >> newMyQPoint.repaintWithNext;
+                    QPoint pt;
+                    int x , y;
+                    stream >> x >> y;
+                    bool flag;
+                    stream >> flag;
+                    pt = QPoint(x, y);
+                    newMyQPoint.point = pt;
+                    newMyQPoint.repaintWithNext = flag;
+                    //qDebug() << pt << flag ;
                     parentMainWidget->paint->gettingPoint.append(newMyQPoint);       
                 }
-                qDebug() << "Get " << count << " Points";
+                //qDebug() << "Get " << count << " Points";
 
-               parentMainWidget->paint->repaint();
+               if (toUpdate) parentMainWidget->paint->repaint();
             }
         }
 

@@ -46,25 +46,26 @@ void MyServer::sendContactBase(QTcpSocket * socket)
     qDebug() << "Contacts send";
 }
 
-void MyServer::sendPoint(QTcpSocket *socket, QList<MyQPoint> &PointArray)
+void MyServer::sendPoint(QTcpSocket *socket, QList<MyQPoint> &PointArray, bool toUpdate)
 {
     QByteArray array;
     QDataStream out (&array, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_4_5);
 
-    out << quint16(0) << quint8(3) << PointArray.count();
+    out << quint16(0) << quint8(3) << PointArray.count() << toUpdate;
 
     QList<MyQPoint>::ConstIterator pos;
+    int k = 0;
     for ( pos = PointArray.constBegin(); pos != PointArray.constEnd(); ++pos )
     {
-        out << (*pos).point << (*pos).repaintWithNext;
-        qDebug() << "Send " << (*pos).point << (*pos).repaintWithNext ;
+        out << (*pos).point.x() << (*pos).point.y() << (*pos).repaintWithNext;
+        qDebug() << "Send " << (*pos).point.x() << (*pos).point.y() << ++k ;
     }
 
     out.device()->seek(0);
-    qDebug() << PointArray.count();
-    PointArray.clear();
+    qDebug() << PointArray.count() << toUpdate;
     socket->write(array);
+    PointArray.clear();
 
 }
 
@@ -212,12 +213,22 @@ void MyServer::slotClientRead()
                int count;
                in >> count;
 
-               MyQPoint newPoint;
+               bool toUpdate;
 
+               in >> toUpdate;
+
+               MyQPoint newPoint;
+                int k = 0;
                for (int i = 0; i < count; ++i)
                {
-                   in >> newPoint.point >> newPoint.repaintWithNext;
-                   qDebug() << "Get " << newPoint.point;
+                   QPoint pt;
+                   int x, y;
+                   bool flag;
+                   in >> x >> y >> flag;
+                   pt = QPoint(x, y);
+                   newPoint.point = pt;
+                   newPoint.repaintWithNext = flag;
+                   qDebug() << "Get " << x << y << ++k;
                    points.append(newPoint);
                }
 
@@ -227,11 +238,10 @@ void MyServer::slotClientRead()
                    if ( pos->userName == userName )
                    {
                        qDebug() << "Send to " << pos->userName;
-                       sendPoint(pos->socket, points);
+                       sendPoint(pos->socket, points, toUpdate);
                    }
                }
                break;
-               qDebug() << "get " << points.count() << "Points ";
             }
         default:break;
         }

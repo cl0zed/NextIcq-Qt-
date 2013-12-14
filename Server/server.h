@@ -38,7 +38,7 @@ private:
 
     void sendMessage(QTcpSocket* , const QString& , const QString &name);
     void sendContactBase(QTcpSocket*);
-    void sendPoint(QTcpSocket*, QList<MyQPoint>& );
+    void sendPoint(QTcpSocket*, QList<MyQPoint>&, bool );
 
 public:
     explicit MyServer(int, QWidget *parent = 0);

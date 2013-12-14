@@ -48,7 +48,7 @@ public:
     void waitSendMessage();
     void send();
     void sendMessageToDelete();
-    void sendPaintedPoints(QList<MyQPoint>& );
+    void sendPaintedPoints(QList<MyQPoint>&, bool );
 private slots:
     void slotReadReady();
     void slotError(QAbstractSocket::SocketError);
